@@ -1,0 +1,286 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Flowchart Sistem E-LHU PROLAB</title>
+  
+  <!-- Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+  
+  <!-- Tailwind CSS CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  
+  <!-- Mermaid.js CDN -->
+  <script src="https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.min.js"></script>
+  
+  <!-- html2pdf.js CDN -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          fontFamily: {
+            sans: ['Outfit', 'sans-serif'],
+            mono: ['JetBrains Mono', 'monospace'],
+          }
+        }
+      }
+    }
+  </script>
+
+  <style>
+    body {
+      background-color: #030712;
+      color: #f3f4f6;
+      font-family: 'Outfit', sans-serif;
+    }
+    
+    /* Print optimizations */
+    .print-section {
+      background: white !important;
+      color: #111827 !important;
+      padding: 40px !important;
+      width: 800px !important;
+      margin: 0 auto !important;
+    }
+    
+    .print-section h2, .print-section h3, .print-section p, .print-section span {
+      color: #111827 !important;
+    }
+    
+    .print-section .text-slate-400, .print-section .text-slate-500 {
+      color: #4b5563 !important;
+    }
+    
+    .print-section .bg-slate-900 {
+      background-color: #f3f4f6 !important;
+    }
+    
+    .print-section .border-slate-800 {
+      border-color: #e5e7eb !important;
+    }
+    
+    .print-stripe {
+      height: 4px;
+      background: linear-gradient(90deg, #ff6b00 0%, #ff8c3a 100%) !important;
+    }
+  </style>
+</head>
+<body class="p-6 md:p-12 min-h-screen">
+
+  <div class="max-w-5xl mx-auto flex flex-col gap-8">
+    <!-- Action Bar -->
+    <div class="flex flex-col sm:flex-row justify-between items-center bg-[#0b1329] border border-slate-800 p-6 rounded-2xl gap-4 shadow-xl">
+      <div>
+        <h1 class="text-lg font-extrabold uppercase tracking-wider text-transparent bg-clip-text bg-gradient-to-r from-orange-500 to-amber-400">Flowchart PDF Generator</h1>
+        <p class="text-xs text-slate-400 font-light mt-1">Dokumentasi diagram alur sistem E-LHU PROLAB teroptimasi untuk cetak PDF berkualitas tinggi.</p>
+      </div>
+      <div class="flex flex-wrap gap-3">
+        <button 
+          id="btn-pdf-1"
+          onclick="downloadPDF('auth-section', 'flowchart_autentikasi_keamanan.pdf')" 
+          class="bg-[#ff6f00] hover:bg-[#e56300] text-white font-bold text-xs px-5 py-3 rounded-xl transition-all flex items-center gap-2 shadow-lg shadow-orange-900/20 cursor-pointer"
+        >
+          <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
+          </svg>
+          Unduh PDF 1: Autentikasi & Sesi
+        </button>
+        <button 
+          id="btn-pdf-2"
+          onclick="downloadPDF('lifecycle-section', 'flowchart_siklus_dokumen_lhu.pdf')" 
+          class="bg-blue-600 hover:bg-blue-700 text-white font-bold text-xs px-5 py-3 rounded-xl transition-all flex items-center gap-2 shadow-lg shadow-blue-900/20 cursor-pointer"
+        >
+          <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
+          </svg>
+          Unduh PDF 2: Siklus LHU
+        </button>
+      </div>
+    </div>
+
+    <!-- Hidden Wrapper for Print rendering -->
+    <div class="flex flex-col gap-12">
+      
+      <!-- Section 1: Authentication & Session Management -->
+      <div id="auth-section" class="print-section bg-white rounded-3xl p-8 shadow-lg text-slate-900 border border-slate-200">
+        <!-- Header -->
+        <div class="flex justify-between items-center border-b-2 border-slate-900 pb-5 mb-6">
+          <div>
+            <h2 class="text-xl font-bold tracking-wider text-slate-900 uppercase">DIAGRAM ALIR SISTEM E-LHU PROLAB</h2>
+            <p class="text-xs text-slate-500 mt-1 font-light">Dokumentasi Alur Autentikasi Biometrik, Proteksi Sesi, dan Keamanan Multi-Peran.</p>
+          </div>
+          <div class="text-right">
+            <span class="text-sm font-bold text-slate-900 uppercase">PROLAB</span>
+            <p class="text-[9px] text-slate-500 font-mono tracking-wider">SERTIFIKASI INDONESIA</p>
+          </div>
+        </div>
+
+        <div class="print-stripe mb-4"></div>
+        <h3 class="text-sm font-bold text-slate-800 uppercase tracking-wider mb-2">1. Alur Autentikasi Biometrik & Manajemen Sesi</h3>
+        <p class="text-[10px] text-slate-500 font-light mb-6">Mekanisme verifikasi wajah, pengaman data localstorage corrupt, remote force logout dari database, serta penanganan auto-logout aktivitas.</p>
+        
+        <!-- Mermaid Container -->
+        <div class="flex justify-center border border-slate-100 p-2 bg-white rounded-xl">
+          <div class="mermaid w-full">
+            flowchart TD
+              Start([Buka Aplikasi]) --> CheckLocal[Periksa LocalStorage]
+              
+              CheckLocal -- Ada lhu_logged_user --> GetRole{Apakah Route Publik?}
+              CheckLocal -- Kosong / Tidak Ada --> IsPublicRoute{Apakah Route Publik?}
+              
+              IsPublicRoute -- Ya /login atau /register --> LoginView[Tampilkan Form Login]
+              IsPublicRoute -- Tidak --> RedirectToLogin[Redirect ke /login]
+              
+              GetRole -- Ya /login atau /register --> RedirectToRole[Redirect ke Dashboard Sesuai Peran]
+              GetRole -- Tidak --> CheckDBSession[Validasi Sesi Aktif di lhu_sessions via lhu_session_id]
+              
+              CheckDBSession -- is_active = false --> ForceLogout[Remote Force Logout: Hapus Storage, Cookies & Redirect ke /login]
+              CheckDBSession -- Gagal Koneksi / Timeout --> BypassDBSession[Bypass & Tampilkan Halaman]
+              CheckDBSession -- is_active = true --> ParseUserJSON[Urai User via JSON.parse]
+              
+              ParseUserJSON -- Parse Gagal / Corrupt --> ClearStorage[Hapus Storage & Redirect ke /login]
+              ParseUserJSON -- Sukses --> CheckAuthGuards{Lolos Role Guard & Commodity Guard?}
+              
+              CheckAuthGuards -- Ditolak --> RejectAlert[Tampilkan Alert Akses Ditolak & Redirect ke Peran yang Sesuai]
+              CheckAuthGuards -- Lolos --> RenderPage[Tampilkan Halaman Dashboard]
+              
+              RenderPage --> ActivityTracker[Monitor Event mouse/keydown/scroll]
+              ActivityTracker --> CheckInactivity{Tidak Aktif > 1 Jam?}
+              
+              CheckInactivity -- Ya --> AutoLogout[Set is_active=false di DB, Hapus Storage, Cookies & Redirect ke /login]
+              CheckInactivity -- Tidak --> CheckHeartbeat{Waktu Heartbeat > 10 Detik?}
+              
+              CheckHeartbeat -- Ya --> Heartbeat[Update last_activity di Local Storage]
+              Heartbeat --> DBHeartbeat{Waktu DB Update > 5 Menit?}
+              DBHeartbeat -- Ya --> UpdateDBHeartbeat[Update last_active_at di Supabase]
+              UpdateDBHeartbeat --> ActivityTracker
+              DBHeartbeat -- Tidak --> ActivityTracker
+              CheckHeartbeat -- Tidak --> ActivityTracker
+          </div>
+        </div>
+
+        <!-- Footer -->
+        <div class="border-t border-slate-200 pt-4 mt-8 flex justify-between items-center text-[9px] text-slate-400 font-mono">
+          <span>E-LHU PROLAB - Dokumen Teknis 1.0 (Autentikasi & Sesi)</span>
+          <span>Halaman 1 dari 1</span>
+        </div>
+      </div>
+
+      <!-- Section 2: Document Lifecycle -->
+      <div id="lifecycle-section" class="print-section bg-white rounded-3xl p-8 shadow-lg text-slate-900 border border-slate-200">
+        <!-- Header -->
+        <div class="flex justify-between items-center border-b-2 border-slate-900 pb-5 mb-6">
+          <div>
+            <h2 class="text-xl font-bold tracking-wider text-slate-900 uppercase">DIAGRAM ALIR SISTEM E-LHU PROLAB</h2>
+            <p class="text-xs text-slate-500 mt-1 font-light">Dokumentasi Siklus Hidup Dokumen LHU Dari Draf Hingga Penerbitan.</p>
+          </div>
+          <div class="text-right">
+            <span class="text-sm font-bold text-slate-900 uppercase">PROLAB</span>
+            <p class="text-[9px] text-slate-500 font-mono tracking-wider">SERTIFIKASI INDONESIA</p>
+          </div>
+        </div>
+
+        <div class="print-stripe mb-4"></div>
+        <h3 class="text-sm font-bold text-slate-800 uppercase tracking-wider mb-2">2. Siklus Hidup Dokumen LHU (LHU Document Lifecycle)</h3>
+        <p class="text-[10px] text-slate-500 font-light mb-6">Proses bertingkat dari unggahan Teknisi, verifikasi awal Admin, audit checklist Supervisor, penerbitan nomor kode LHU/Sertifikat, notifikasi WhatsApp, hingga verifikasi QR Code.</p>
+        
+        <!-- Mermaid Container -->
+        <div class="flex justify-center border border-slate-100 p-2 bg-white rounded-xl">
+          <div class="mermaid w-full">
+            flowchart TD
+              TeknisiStart([Teknisi / Tester]) --> UploadDoc[Unggah Berkas LHU Baru]
+              UploadDoc --> FormChecklist[Checklist Dinamis Berdasarkan Komoditas]
+              FormChecklist --> SavePendingAdmin[Status: PENDING_ADMIN]
+              
+              SavePendingAdmin --> AdminCheck([Admin Laboratorium])
+              AdminCheck --> ReviewAdmin{Cek Validitas Berkas & Parameter}
+              
+              ReviewAdmin -- Salah / Tidak Sesuai --> RejectAdmin[Catatan Revisi & Status: PENDING_ADMIN]
+              RejectAdmin --> NotifyTeknisi[Notifikasi Perbaikan di Dashboard]
+              NotifyTeknisi --> ReSubmit[Teknisi Revisi & Upload Ulang Dokumen]
+              ReSubmit --> ReviewAdmin
+              
+              ReviewAdmin -- Valid / Sesuai --> ApproveAdmin[Status: PENDING_SUPERVISOR]
+              
+              ApproveAdmin --> SpvCheck([Supervisor Laboratorium])
+              SpvCheck --> ReviewSpv{Audit Checklist Teknis & Parameter}
+              
+              ReviewSpv -- Gagal Audit --> RejectSpv[Catatan Penolakan & Status: PENDING_ADMIN]
+              RejectSpv --> NotifyTeknisi
+              
+              ReviewSpv -- Lolos Audit --> ApproveSpv[Tanda Tangan Audit & Status: PENDING_NUMBERING]
+              
+              ApproveSpv --> AdminNumbering([Admin - Penomoran & File Final])
+              AdminNumbering --> GenerateNumber[Generate Nomor Kode LHU/Sertifikat Otomatis]
+              GenerateNumber --> ValidateUnique{Periksa Unik di DB}
+              
+              ValidateUnique -- Sudah Ada / Duplikat --> FailUnique[Tampilkan Error & Minta Sesuaikan Nomor]
+              FailUnique --> GenerateNumber
+              
+              ValidateUnique -- Belum Ada --> FinalDocumentMode{Pilih Mode Dokumen Final}
+              FinalDocumentMode -- Unggah File Final --> UploadFinalPDF[Unggah PDF Final Berkode Nomor]
+              FinalDocumentMode -- Nomor Tanpa Dokumen --> KeepDraftPDF[Gunakan Berkas Draf Lama]
+              
+              UploadFinalPDF --> PublishDoc[Simpan Nomor, Log Audit & Status: APPROVED]
+              KeepDraftPDF --> PublishDoc
+              
+              PublishDoc --> WaNotify{Kirim Notifikasi WhatsApp?}
+              WaNotify -- Ya --> SendWaLink[Buka WhatsApp Web: Kirim Ringkasan & Link Verifikasi]
+              WaNotify -- Tidak --> DirectFinish[Selesai]
+              
+              PublishDoc --> ManagerReview([Manager QHSE / Direktur])
+              ManagerReview --> ReviewFinal[Review Final Riwayat Berkas & TTE]
+              ReviewFinal --> DirectFinish
+              
+              DirectFinish --> PublicVerify([Verifikasi Publik - Halaman /verify])
+              PublicVerify --> ShowVerifyDetails[Tampilkan Keabsahan, File PDF, Riwayat & Checklist Lengkap]
+              ShowVerifyDetails --> VisualCompare{Pilih Bandingkan?}
+              VisualCompare -- Ya --> SideBySide[Tampilkan Side-by-Side Visual Comparison dengan Versi Lama]
+          </div>
+        </div>
+
+        <!-- Footer -->
+        <div class="border-t border-slate-200 pt-4 mt-8 flex justify-between items-center text-[9px] text-slate-400 font-mono">
+          <span>E-LHU PROLAB - Dokumen Teknis 1.0 (Siklus LHU)</span>
+          <span>Halaman 1 dari 1</span>
+        </div>
+      </div>
+      
+    </div>
+  </div>
+
+  <script>
+    // Initialize Mermaid with custom clean theme matching PDF look
+    mermaid.initialize({
+      startOnLoad: true,
+      theme: 'neutral',
+      securityLevel: 'loose',
+      flowchart: {
+        useMaxWidth: true,
+        htmlLabels: true,
+        curve: 'basis'
+      }
+    });
+
+    function downloadPDF(elementId, filename) {
+      const element = document.getElementById(elementId);
+      
+      const opt = {
+        margin:       [0.2, 0.2, 0.2, 0.2],
+        filename:     filename,
+        image:        { type: 'jpeg', quality: 1.0 },
+        html2canvas:  { scale: 2, useCORS: true, backgroundColor: '#ffffff' },
+        jsPDF:        { unit: 'in', format: 'a4', orientation: 'portrait' }
+      };
+
+      // Generate and save
+      html2pdf().set(opt).from(element).save();
+    }
+  </script>
+</body>
+</html>

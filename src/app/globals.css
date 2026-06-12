@@ -1,0 +1,420 @@
+@import "tailwindcss";
+
+@custom-variant dark (&:where(.dark, .dark *));
+
+@theme {
+  /* PROLAB Brand Colors mapped to standard utility classes */
+  --color-navy-dark: #000000;
+  --color-navy-card: #1a1a1a;
+  --color-navy-input: #0d0d0d;
+  
+  --color-blue-400: #1c69d4;
+  --color-blue-500: #145db3;
+  --color-blue-600: #0f4c9c; /* Primary Brand Blue from logo1.png */
+  --color-blue-700: #0b3c7d;
+  --color-blue-800: #072b5c;
+  
+  --color-orange-400: #ff8533;
+  --color-orange-500: #ff6f00; /* Accent Brand Orange from logo1.png */
+  --color-orange-600: #e56300;
+  --color-orange-700: #cc5800;
+
+  /* Overwrite border-radius to enforce 0px sharp rectangular corners globally */
+  --radius-xs: 0px;
+  --radius-sm: 0px;
+  --radius-md: 0px;
+  --radius-lg: 0px;
+  --radius-xl: 0px;
+  --radius-2xl: 0px;
+  --radius-3xl: 0px;
+
+  /* Dynamically mapped semantic variables injected by our script */
+  --color-theme-base: var(--theme-base);
+  --color-theme-card: var(--theme-card);
+  --color-theme-input: var(--theme-input);
+  --color-theme-hover: var(--theme-hover);
+  --color-theme-border: var(--theme-border);
+  --color-theme-text: var(--theme-text);
+  --color-theme-muted: var(--theme-muted);
+  --color-theme-dim: var(--theme-dim);
+  /* Status and Badge Semantic Variables */
+  --color-status-blue-text: var(--status-blue-text);
+  --color-status-blue-bg: var(--status-blue-bg);
+  --color-status-blue-border: var(--status-blue-border);
+
+  --color-status-amber-text: var(--status-amber-text);
+  --color-status-amber-bg: var(--status-amber-bg);
+  --color-status-amber-border: var(--status-amber-border);
+
+  --color-status-orange-text: var(--status-orange-text);
+  --color-status-orange-bg: var(--status-orange-bg);
+  --color-status-orange-border: var(--status-orange-border);
+
+  --color-status-emerald-text: var(--status-emerald-text);
+  --color-status-emerald-bg: var(--status-emerald-bg);
+  --color-status-emerald-border: var(--status-emerald-border);
+
+  --color-status-red-text: var(--status-red-text);
+  --color-status-red-bg: var(--status-red-bg);
+  --color-status-red-border: var(--status-red-border);
+
+  --color-status-purple-text: var(--status-purple-text);
+  --color-status-purple-bg: var(--status-purple-bg);
+  --color-status-purple-border: var(--status-purple-border);
+
+  --color-status-indigo-text: var(--status-indigo-text);
+  --color-status-indigo-bg: var(--status-indigo-bg);
+  --color-status-indigo-border: var(--status-indigo-border);
+
+  --color-status-rose-text: var(--status-rose-text);
+  --color-status-rose-bg: var(--status-rose-bg);
+  --color-status-rose-border: var(--status-rose-border);
+
+  --color-status-teal-text: var(--status-teal-text);
+  --color-status-teal-bg: var(--status-teal-bg);
+  --color-status-teal-border: var(--status-teal-border);
+
+  /* Solid Action Button Tokens */
+  --color-btn-primary: var(--btn-primary);
+  --color-btn-primary-hover: var(--btn-primary-hover);
+  --color-btn-primary-text: var(--btn-primary-text);
+  --color-btn-danger: var(--btn-danger);
+  --color-btn-danger-hover: var(--btn-danger-hover);
+  --color-btn-success: var(--btn-success);
+  --color-btn-success-hover: var(--btn-success-hover);
+  --color-btn-blue: var(--btn-blue);
+  --color-btn-blue-hover: var(--btn-blue-hover);
+}
+
+:root {
+  /* Light mode colors (Improved contrast) */
+  --theme-base: #f1f5f9; /* Slate 100 */
+  --theme-card: #ffffff;
+  --theme-input: #f8fafc;
+  --theme-hover: #e2e8f0; /* Slate 200 */
+  --theme-border: #cbd5e1; /* Slate 300 */
+  --theme-text: #0f172a; /* Slate 900 */
+  --theme-muted: #334155; /* Slate 700 (much darker) */
+  --theme-dim: #475569; /* Slate 600 (much darker) */
+
+  /* Light mode status badges */
+  --status-blue-text: #1d4ed8; 
+  --status-blue-bg: #dbeafe; 
+  --status-blue-border: #bfdbfe; 
+
+  --status-amber-text: #b45309; 
+  --status-amber-bg: #fef3c7; 
+  --status-amber-border: #fde68a; 
+
+  --status-orange-text: #c2410c; 
+  --status-orange-bg: #ffedd5; 
+  --status-orange-border: #fed7aa; 
+
+  --status-emerald-text: #047857; 
+  --status-emerald-bg: #d1fae5; 
+  --status-emerald-border: #a7f3d0; 
+
+  --status-red-text: #b91c1c; 
+  --status-red-bg: #fee2e2; 
+  --status-red-border: #fecaca; 
+
+  --status-purple-text: #6d28d9; 
+  --status-purple-bg: #f3e8ff; 
+  --status-purple-border: #e9d5ff; 
+
+  --status-indigo-text: #4338ca; 
+  --status-indigo-bg: #e0e7ff; 
+  --status-indigo-border: #c7d2fe; 
+
+  --status-rose-text: #be123c; 
+  --status-rose-bg: #ffe4e6; 
+  --status-rose-border: #fecdd3; 
+
+  --status-teal-text: #0f766e;
+  --status-teal-bg: #ccfbf1;
+  --status-teal-border: #99f6e4; 
+
+  /* Light mode solid action buttons — vibrant on white backgrounds */
+  --btn-primary: #ea6c00;       /* PROLAB brand orange, solid */
+  --btn-primary-hover: #d15c00;
+  --btn-primary-text: #ffffff;
+  --btn-danger: #dc2626;
+  --btn-danger-hover: #b91c1c;
+  --btn-success: #059669;
+  --btn-success-hover: #047857;
+  --btn-blue: #2563eb;
+  --btn-blue-hover: #1d4ed8;
+}
+
+.dark {
+  /* Dark mode colors */
+  --theme-base: #030c17; 
+  --theme-card: #081628; 
+  --theme-input: #050f1a;
+  --theme-hover: #0f2942;
+  --theme-border: #1e293b;
+  --theme-text: #f1f5f9; 
+  --theme-muted: #cbd5e1;
+  --theme-dim: #64748b;
+
+  /* Dark mode status badges */
+  --status-blue-text: #60a5fa; 
+  --status-blue-bg: rgba(30, 58, 138, 0.4); 
+  --status-blue-border: rgba(30, 58, 138, 0.6); 
+
+  --status-amber-text: #fbbf24; 
+  --status-amber-bg: rgba(120, 53, 15, 0.4); 
+  --status-amber-border: rgba(120, 53, 15, 0.6);
+
+  --status-orange-text: #fb923c; 
+  --status-orange-bg: rgba(124, 45, 18, 0.4); 
+  --status-orange-border: rgba(124, 45, 18, 0.6);
+
+  --status-emerald-text: #34d399; 
+  --status-emerald-bg: rgba(6, 78, 59, 0.4);
+  --status-emerald-border: rgba(6, 78, 59, 0.6);
+
+  --status-red-text: #f87171; 
+  --status-red-bg: rgba(127, 29, 29, 0.4);
+  --status-red-border: rgba(127, 29, 29, 0.6);
+
+  --status-purple-text: #c084fc; 
+  --status-purple-bg: rgba(88, 28, 135, 0.4);
+  --status-purple-border: rgba(88, 28, 135, 0.6);
+
+  --status-indigo-text: #818cf8; 
+  --status-indigo-bg: rgba(49, 46, 129, 0.4);
+  --status-indigo-border: rgba(49, 46, 129, 0.6);
+
+  --status-rose-text: #fb7185; 
+  --status-rose-bg: rgba(136, 19, 55, 0.4);
+  --status-rose-border: rgba(136, 19, 55, 0.6);
+
+  --status-teal-text: #2dd4bf;
+  --status-teal-bg: rgba(13, 148, 136, 0.2);
+  --status-teal-border: rgba(13, 148, 136, 0.4);
+
+  /* Dark mode solid action buttons — brighter/more vibrant on dark backgrounds */
+  --btn-primary: #f97316;       /* Vivid orange-500 */
+  --btn-primary-hover: #fb923c; /* orange-400, slightly lighter on hover */
+  --btn-primary-text: #0a0a0a;
+  --btn-danger: #ef4444;        /* red-500 */
+  --btn-danger-hover: #f87171;  /* red-400 */
+  --btn-success: #10b981;       /* emerald-500 */
+  --btn-success-hover: #34d399; /* emerald-400 */
+  --btn-blue: #3b82f6;          /* blue-500 */
+  --btn-blue-hover: #60a5fa;    /* blue-400 */
+}
+
+body {
+  background-color: var(--theme-base);
+  color: var(--theme-text);
+  font-family: 'Inter', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;
+  font-weight: 300;
+  transition: background-color 0.3s ease, color 0.3s ease;
+}
+
+/* ===== SOLID ACTION BUTTON UTILITIES ===== */
+/* Use these for interactive buttons (Save, Login, Submit, etc.) */
+/* NOT for status badges — use status-*-bg for those */
+
+.btn-primary {
+  background-color: var(--btn-primary);
+  color: var(--btn-primary-text);
+  transition: background-color 0.15s ease, box-shadow 0.15s ease, transform 0.1s ease;
+}
+.btn-primary:hover:not(:disabled) {
+  background-color: var(--btn-primary-hover);
+  box-shadow: 0 4px 16px rgba(249, 115, 22, 0.35);
+}
+.btn-primary:active:not(:disabled) {
+  transform: scale(0.98);
+}
+.btn-primary:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+
+.btn-blue {
+  background-color: var(--btn-blue);
+  color: #ffffff;
+  transition: background-color 0.15s ease, box-shadow 0.15s ease, transform 0.1s ease;
+}
+.btn-blue:hover:not(:disabled) {
+  background-color: var(--btn-blue-hover);
+  box-shadow: 0 4px 16px rgba(59, 130, 246, 0.35);
+}
+.btn-blue:active:not(:disabled) {
+  transform: scale(0.98);
+}
+.btn-blue:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+
+.btn-success {
+  background-color: var(--btn-success);
+  color: #ffffff;
+  transition: background-color 0.15s ease, box-shadow 0.15s ease, transform 0.1s ease;
+}
+.btn-success:hover:not(:disabled) {
+  background-color: var(--btn-success-hover);
+  box-shadow: 0 4px 16px rgba(16, 185, 129, 0.35);
+}
+.btn-success:active:not(:disabled) {
+  transform: scale(0.98);
+}
+.btn-success:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+
+.btn-danger {
+  background-color: var(--btn-danger);
+  color: #ffffff;
+  transition: background-color 0.15s ease, box-shadow 0.15s ease, transform 0.1s ease;
+}
+.btn-danger:hover:not(:disabled) {
+  background-color: var(--btn-danger-hover);
+  box-shadow: 0 4px 16px rgba(239, 68, 68, 0.35);
+}
+.btn-danger:active:not(:disabled) {
+  transform: scale(0.98);
+}
+.btn-danger:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+
+/* Secondary/ghost button */
+.btn-secondary {
+  background-color: var(--theme-input);
+  color: var(--theme-muted);
+  border: 1px solid var(--theme-border);
+  transition: background-color 0.15s ease, color 0.15s ease;
+}
+.btn-secondary:hover:not(:disabled) {
+  background-color: var(--theme-hover);
+  color: var(--theme-text);
+}
+.btn-secondary:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+
+.prolab-stripe {
+  height: 4px;
+  background: linear-gradient(to right, #1c69d4 33.3%, #0f4c9c 33.3% 66.6%, #ff6f00 66.6%);
+  width: 100%;
+}
+
+/* Custom Timeline Drawer Components */
+.timeline-flow {
+  display: flex;
+  flex-direction: column;
+  gap: 1.75rem;
+  position: relative;
+  padding-left: 1rem;
+  margin-top: 1rem;
+}
+
+.timeline-flow::before {
+  content: '';
+  position: absolute;
+  top: 0.25rem;
+  left: 0.5rem;
+  bottom: 0.25rem;
+  width: 2px;
+  background-color: var(--theme-border); /* slate-800 for dark theme */
+}
+
+.timeline-node {
+  display: flex;
+  gap: 1.5rem;
+  position: relative;
+}
+
+.timeline-marker {
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  background-color: var(--theme-border);
+  border: 3px solid var(--theme-card); /* dark card background */
+  z-index: 10;
+  margin-top: 0.25rem;
+  transition: all 0.15s ease;
+}
+
+.timeline-node.success .timeline-marker {
+  background-color: #10b981;
+  box-shadow: 0 0 8px rgba(16, 185, 129, 0.4);
+}
+
+.timeline-node.warning .timeline-marker {
+  background-color: #f59e0b;
+  box-shadow: 0 0 8px rgba(245, 158, 11, 0.4);
+}
+
+.timeline-node.danger .timeline-marker {
+  background-color: #ef4444;
+  box-shadow: 0 0 8px rgba(239, 68, 68, 0.4);
+}
+
+.timeline-node.active .timeline-marker {
+  background-color: #3b82f6;
+  box-shadow: 0 0 8px rgba(59, 130, 246, 0.4);
+}
+
+.timeline-node.pending .timeline-marker {
+  background-color: var(--theme-muted); /* slate-700 */
+}
+
+.timeline-body {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+  text-align: left;
+}
+
+.timeline-time {
+  font-size: 0.75rem;
+  color: var(--theme-dim); /* slate-400 */
+  font-family: monospace;
+}
+
+/* Animations */
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@keyframes scaleUp {
+  from { transform: scale(0.95); opacity: 0; }
+  to { transform: scale(1); opacity: 1; }
+}
+
+@keyframes slideIn {
+  from { transform: translateX(100%); }
+  to { transform: translateX(0); }
+}
+
+.animate-fade-in {
+  animation: fadeIn 0.2s ease-out forwards;
+}
+
+.animate-scale-up {
+  animation: scaleUp 0.25s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+.animate-slide-in {
+  animation: slideIn 0.3s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+/* PROLAB Logo Container - Preserves colors without inverting */
+.prolab-logo {
+  background-color: #0b3668; /* Corporate Blue from Logo 1 */
+  padding: 0.4rem 1rem;
+  border-radius: 0.75rem;
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+}
