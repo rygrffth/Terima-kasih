@@ -6,6 +6,7 @@ import { supabase } from '../lib/supabase';
 import { SidebarPanel, SidebarTrigger } from './Sidebar';
 import { Sun, Moon } from 'lucide-react';
 import { useTheme } from 'next-themes';
+import { NotificationBell } from './NotificationBell';
 
 interface AuthWrapperProps {
   children: React.ReactNode;
@@ -166,84 +167,6 @@ export default function AuthWrapper({ children }: AuthWrapperProps) {
     return () => {
       window.removeEventListener('online', syncOfflineDocs);
     };
-  }, []);
-
-  useEffect(() => {
-    if (typeof window === 'undefined') return;
-
-    const cleanupExpiredDraftFiles = async () => {
-      // Run only once per session
-      if (sessionStorage.getItem('lhu_drafts_cleaned') === 'true') {
-        return;
-      }
-
-      try {
-        // Fetch approved documents that have version history
-        const { data: approvedDocs, error } = await supabase
-          .from('lhu_document')
-          .select('id, judul, previous_file_path, approved_at, updated_at')
-          .eq('status', 'APPROVED');
-
-        if (error || !approvedDocs) return;
-
-        const SEVEN_DAYS_MS = 7 * 24 * 60 * 60 * 1000; // 7 days retention
-        const now = Date.now();
-
-        for (const doc of approvedDocs) {
-          if (!doc.previous_file_path) continue;
-
-          try {
-            const trimmedPrev = doc.previous_file_path.trim();
-            if (!trimmedPrev.startsWith('[')) continue;
-
-            const versions = JSON.parse(trimmedPrev);
-            let hasChanges = false;
-            const filesToDelete: string[] = [];
-
-            // Calculate approval time or fallback to updated_at
-            const approvalTime = new Date(doc.approved_at || doc.updated_at).getTime();
-
-            // If approved more than 7 days ago, delete old draft files
-            if (now - approvalTime > SEVEN_DAYS_MS) {
-              const updatedVersions = versions.map((ver: any) => {
-                if (ver.file_path && !ver.file_path.startsWith('fallback_path/') && ver.file_path !== 'deleted') {
-                  filesToDelete.push(ver.file_path);
-                  hasChanges = true;
-                  return { ...ver, file_path: 'deleted' };
-                }
-                return ver;
-              });
-
-              if (hasChanges && filesToDelete.length > 0) {
-                // Remove files from storage
-                console.log(`[Retention Policy] Deleting expired draft files for doc "${doc.judul}":`, filesToDelete);
-                const { error: storageErr } = await supabase.storage
-                  .from('lhu-documents')
-                  .remove(filesToDelete);
-
-                if (!storageErr) {
-                  // Update previous_file_path in database
-                  await supabase
-                    .from('lhu_document')
-                    .update({ previous_file_path: JSON.stringify(updatedVersions) })
-                    .eq('id', doc.id);
-                } else {
-                  console.error('Failed to delete storage files during cleanup:', storageErr);
-                }
-              }
-            }
-          } catch (parseErr) {
-            console.error('Failed to parse previous_file_path during cleanup:', parseErr);
-          }
-        }
-
-        sessionStorage.setItem('lhu_drafts_cleaned', 'true');
-      } catch (err) {
-        console.error('Error in retention cleanup routine:', err);
-      }
-    };
-
-    cleanupExpiredDraftFiles();
   }, []);
 
   useEffect(() => {
@@ -548,6 +471,10 @@ export default function AuthWrapper({ children }: AuthWrapperProps) {
       <div className="fixed top-0 left-0 right-0 z-50 prolab-stripe" />
 
       <SidebarTrigger onClick={() => setSidebarOpen(true)} />
+
+      <div className="fixed top-4 right-16 z-30">
+        <NotificationBell />
+      </div>
 
       <button
         onClick={toggleTheme}

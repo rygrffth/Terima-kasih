@@ -7,7 +7,7 @@ import { supabase } from '../lib/supabase';
 import { 
   Home, FileText, BarChart3, Activity, Users, Settings, Shield,
   Upload, Clock, Hash, ClipboardList, ShieldCheck, User,
-  X, Menu, LogOut, ChevronRight, Sun, Moon
+  X, Menu, LogOut, ChevronRight, Sun, Moon, Calendar
 } from 'lucide-react';
 import { useTheme } from 'next-themes';
 
@@ -219,6 +219,18 @@ export function SidebarPanel({ isOpen, onClose }: SidebarProps) {
                 <Home size={17} className={isActive('/') ? 'text-theme-text' : 'text-theme-dim group-hover:text-theme-muted'} />
                 <span className="flex-1">Arsip & Dashboard Dokumen</span>
                 {isActive('/') && <ChevronRight size={14} className="text-theme-text" />}
+              </span>
+            </Link>
+
+            <Link href="/calendar" onClick={onClose}>
+              <span className={`flex items-center gap-3 px-4 py-3 rounded-none text-sm font-semibold transition-all cursor-pointer group ${
+                isActive('/calendar')
+                  ? 'bg-theme-input border-l-2 border-theme-text text-theme-text'
+                  : 'text-theme-muted hover:text-theme-text hover:bg-theme-card border-l-2 border-transparent'
+              }`}>
+                <Calendar size={17} className={isActive('/calendar') ? 'text-theme-text' : 'text-theme-dim group-hover:text-theme-muted'} />
+                <span className="flex-1">Kalender Dokumen</span>
+                {isActive('/calendar') && <ChevronRight size={14} className="text-theme-text" />}
               </span>
             </Link>
 
