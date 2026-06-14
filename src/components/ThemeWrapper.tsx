@@ -10,6 +10,18 @@ function AntdConfigWrapper({ children }: { children: React.ReactNode }) {
 
   useEffect(() => {
     setMounted(true);
+    if (typeof window !== 'undefined' && 'serviceWorker' in navigator) {
+      window.addEventListener('load', () => {
+        navigator.serviceWorker.register('/sw.js').then(
+          (registration) => {
+            console.log('ServiceWorker registration successful with scope: ', registration.scope);
+          },
+          (err) => {
+            console.error('ServiceWorker registration failed: ', err);
+          }
+        );
+      });
+    }
   }, []);
 
   const isDark = mounted ? resolvedTheme === "dark" : true; // Default to dark during SSR to avoid flash if mostly dark

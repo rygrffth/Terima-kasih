@@ -25,6 +25,228 @@ export default function AuthWrapper({ children }: AuthWrapperProps) {
   }, []);
 
   useEffect(() => {
+    if (typeof window === 'undefined') return;
+
+    const syncOfflineDocs = async () => {
+      if (!navigator.onLine) return;
+
+      try {
+        const { getOfflineUploads, deleteOfflineUpload } = await import('../lib/indexedDb');
+        const offlineDocs = await getOfflineUploads();
+
+        if (offlineDocs.length === 0) return;
+
+        console.log(`Menemukan ${offlineDocs.length} dokumen offline untuk disinkronkan...`);
+
+        // Loop through all offline documents and upload them one by one
+        for (const doc of offlineDocs) {
+          try {
+            // 1. Upload main file
+            const fileExt = doc.file.name.split('.').pop();
+            const fileName = `${Date.now()}_${Math.random().toString(36).substring(2, 9)}.${fileExt}`;
+            const filePath = `uploads/${fileName}`;
+
+            let finalFilePath = filePath;
+            const { error: uploadErr } = await supabase.storage
+              .from('lhu-documents')
+              .upload(filePath, doc.file);
+
+            if (uploadErr) {
+              console.warn('Gagal mengunggah file utama offline ke storage, menggunakan fallback...', uploadErr);
+              finalFilePath = `fallback_path/${fileName}`;
+            }
+
+            // 2. Determine document number
+            let chosenNomorLhu = 1;
+            const settingKey = doc.tipe_dokumen === 'Sertifikat' ? 'next_cert_number' : 'next_lhu_number';
+            try {
+              const { data: settingData, error: settingErr } = await supabase
+                .from('lhu_settings')
+                .select('value')
+                .eq('key', settingKey)
+                .maybeSingle();
+
+              if (!settingErr && settingData) {
+                chosenNomorLhu = parseInt(settingData.value);
+              } else {
+                const { data: maxDocs } = await supabase
+                  .from('lhu_document')
+                  .select('nomor_lhu')
+                  .eq('tipe_dokumen', doc.tipe_dokumen)
+                  .order('nomor_lhu', { ascending: false })
+                  .limit(1);
+                const maxNum = maxDocs && maxDocs.length > 0 ? maxDocs[0].nomor_lhu : 0;
+                chosenNomorLhu = maxNum + 1;
+              }
+            } catch (seqFetchErr) {
+              console.error('Gagal mengambil nomor induk saat sinkronisasi offline:', seqFetchErr);
+            }
+
+            // 3. Insert document record
+            const { data: dbData, error: dbErr } = await supabase
+              .from('lhu_document')
+              .insert([{
+                judul: doc.judul,
+                file_path: finalFilePath,
+                uploaded_by: doc.uploaded_by,
+                status: 'PENDING_SUPERVISOR',
+                komoditi: doc.komoditi,
+                departemen: (doc.kategori_dokumen && doc.kategori_dokumen !== 'None') ? doc.kategori_dokumen : null,
+                tipe_dokumen: doc.tipe_dokumen,
+                priority: doc.priority || 'normal',
+                nomor_lhu: chosenNomorLhu
+              }])
+              .select();
+
+            if (dbErr) throw dbErr;
+
+            // Update next sequence number
+            try {
+              await supabase
+                .from('lhu_settings')
+                .upsert({ key: settingKey, value: String(chosenNomorLhu + 1) }, { onConflict: 'key' });
+            } catch (seqUpdateErr) {
+              console.error('Gagal mengupdate sequence number saat sinkronisasi offline:', seqUpdateErr);
+            }
+
+            const newDoc = dbData[0];
+
+            // 4. Upload additional attachment files if any
+            if (doc.additionalFiles && doc.additionalFiles.length > 0) {
+              for (const attFile of doc.additionalFiles) {
+                const ext = attFile.name.split('.').pop();
+                const attFileName = `${Date.now()}_att_${Math.random().toString(36).substring(2, 9)}.${ext}`;
+                const attPath = `uploads/attachments/${attFileName}`;
+
+                const { error: attUploadErr } = await supabase.storage
+                  .from('lhu-documents')
+                  .upload(attPath, attFile);
+
+                if (!attUploadErr) {
+                  await supabase
+                    .from('lhu_attachments')
+                    .insert([{
+                      doc_id: newDoc.id,
+                      file_path: attPath,
+                      file_name: attFile.name
+                    }]);
+                }
+              }
+            }
+
+            // 5. Log audit trail
+            const prefix = doc.tipe_dokumen === 'Sertifikat' ? 'CERT' : 'LHU';
+            const formattedNum = `${prefix}-${String(chosenNomorLhu).padStart(3, '0')}`;
+            const { logAudit } = await import('../lib/audit');
+            await logAudit(doc.uploaded_by, 'admin', 'UPLOAD_LHU', `[OFFLINE SYNC] Menyinkronkan dokumen offline baru ke Supervisor: ${formattedNum} - ${doc.judul}`);
+
+            // 6. Delete from IndexedDB upon success
+            await deleteOfflineUpload(doc.id);
+
+          } catch (itemErr) {
+            console.error('Gagal menyinkronkan salah satu berkas offline:', doc.judul, itemErr);
+          }
+        }
+
+        // Dispatch events and notify the user
+        window.dispatchEvent(new Event('lhu_document_changed'));
+        alert(`Koneksi internet pulih. Seluruh dokumen yang tertunda di offline (${offlineDocs.length}) telah berhasil disinkronkan ke server.`);
+
+      } catch (err) {
+        console.error('Error saat menjalankan proses sinkronisasi offline:', err);
+      }
+    };
+
+    window.addEventListener('online', syncOfflineDocs);
+    // Also check on mount if online
+    if (navigator.onLine) {
+      syncOfflineDocs();
+    }
+
+    return () => {
+      window.removeEventListener('online', syncOfflineDocs);
+    };
+  }, []);
+
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+
+    const cleanupExpiredDraftFiles = async () => {
+      // Run only once per session
+      if (sessionStorage.getItem('lhu_drafts_cleaned') === 'true') {
+        return;
+      }
+
+      try {
+        // Fetch approved documents that have version history
+        const { data: approvedDocs, error } = await supabase
+          .from('lhu_document')
+          .select('id, judul, previous_file_path, approved_at, updated_at')
+          .eq('status', 'APPROVED');
+
+        if (error || !approvedDocs) return;
+
+        const SEVEN_DAYS_MS = 7 * 24 * 60 * 60 * 1000; // 7 days retention
+        const now = Date.now();
+
+        for (const doc of approvedDocs) {
+          if (!doc.previous_file_path) continue;
+
+          try {
+            const trimmedPrev = doc.previous_file_path.trim();
+            if (!trimmedPrev.startsWith('[')) continue;
+
+            const versions = JSON.parse(trimmedPrev);
+            let hasChanges = false;
+            const filesToDelete: string[] = [];
+
+            // Calculate approval time or fallback to updated_at
+            const approvalTime = new Date(doc.approved_at || doc.updated_at).getTime();
+
+            // If approved more than 7 days ago, delete old draft files
+            if (now - approvalTime > SEVEN_DAYS_MS) {
+              const updatedVersions = versions.map((ver: any) => {
+                if (ver.file_path && !ver.file_path.startsWith('fallback_path/') && ver.file_path !== 'deleted') {
+                  filesToDelete.push(ver.file_path);
+                  hasChanges = true;
+                  return { ...ver, file_path: 'deleted' };
+                }
+                return ver;
+              });
+
+              if (hasChanges && filesToDelete.length > 0) {
+                // Remove files from storage
+                console.log(`[Retention Policy] Deleting expired draft files for doc "${doc.judul}":`, filesToDelete);
+                const { error: storageErr } = await supabase.storage
+                  .from('lhu-documents')
+                  .remove(filesToDelete);
+
+                if (!storageErr) {
+                  // Update previous_file_path in database
+                  await supabase
+                    .from('lhu_document')
+                    .update({ previous_file_path: JSON.stringify(updatedVersions) })
+                    .eq('id', doc.id);
+                } else {
+                  console.error('Failed to delete storage files during cleanup:', storageErr);
+                }
+              }
+            }
+          } catch (parseErr) {
+            console.error('Failed to parse previous_file_path during cleanup:', parseErr);
+          }
+        }
+
+        sessionStorage.setItem('lhu_drafts_cleaned', 'true');
+      } catch (err) {
+        console.error('Error in retention cleanup routine:', err);
+      }
+    };
+
+    cleanupExpiredDraftFiles();
+  }, []);
+
+  useEffect(() => {
     // Subscribe to real-time changes on the lhu_document table
     const channel = supabase
       .channel('realtime-lhu-document-changes')

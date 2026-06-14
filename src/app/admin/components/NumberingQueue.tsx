@@ -175,6 +175,45 @@ export default function NumberingQueue({
 
       if (dbErr) throw dbErr;
 
+      // Clean up/delete old draft version files from storage to save database space
+      try {
+        let filesToDelete: string[] = [];
+        
+        // 1. Gather files from previous versions array (if any)
+        if (selectedDoc.previous_file_path) {
+          const trimmedPrev = selectedDoc.previous_file_path.trim();
+          if (trimmedPrev.startsWith('[')) {
+            const parsedVersions = JSON.parse(trimmedPrev);
+            const versionPaths = parsedVersions
+              .map((v: any) => v.file_path)
+              .filter((path: string) => path && !path.startsWith('fallback_path/'));
+            filesToDelete.push(...versionPaths);
+          } else {
+            if (!trimmedPrev.startsWith('fallback_path/')) {
+              filesToDelete.push(trimmedPrev);
+            }
+          }
+        }
+
+        // 2. Gather active draft file if we just uploaded a new final file
+        if (!skipUpload && selectedDoc.file_path && !selectedDoc.file_path.startsWith('fallback_path/')) {
+          filesToDelete.push(selectedDoc.file_path);
+        }
+
+        // 3. Remove gathered files from Supabase storage
+        if (filesToDelete.length > 0) {
+          console.log('Menghapus file draf versi lama dari storage:', filesToDelete);
+          const { error: removeErr } = await supabase.storage
+            .from('lhu-documents')
+            .remove(filesToDelete);
+          if (removeErr) {
+            console.warn('Gagal menghapus file versi lama dari storage:', removeErr);
+          }
+        }
+      } catch (cleanErr) {
+        console.error('Error saat membersihkan file draf versi lama:', cleanErr);
+      }
+
       await logAudit(
         userName,
         'admin',

@@ -93,20 +93,174 @@ export default function UsersTab({
   const [editAllowedKomoditi, setEditAllowedKomoditi] = useState<string[]>([]);
   const [editAllowedDepartemen, setEditAllowedDepartemen] = useState<string[]>([]);
   const [dbDivisions, setDbDivisions] = useState<string[]>([]);
+  
+  // Division master states
+  const [divisionsList, setDivisionsList] = useState<{ id: string; name: string; code: string }[]>([]);
+  const [newDivName, setNewDivName] = useState('');
+  const [newDivCode, setNewDivCode] = useState('');
+  const [editingDiv, setEditingDiv] = useState<{ id: string; name: string; code: string } | null>(null);
+  const [editDivName, setEditDivName] = useState('');
+  const [editDivCode, setEditDivCode] = useState('');
+  const [isProcessingDiv, setIsProcessingDiv] = useState(false);
+  const [divError, setDivError] = useState('');
+  const [divSuccess, setDivSuccess] = useState('');
+
+  const fetchDivisions = async () => {
+    try {
+      const { data, error } = await supabase
+        .from('lhu_divisions')
+        .select('id, name, code')
+        .order('name', { ascending: true });
+      if (error) throw error;
+      if (data) {
+        setDivisionsList(data);
+        setDbDivisions(data.map(d => d.name));
+      }
+    } catch (err) {
+      console.error('Failed to load divisions:', err);
+    }
+  };
 
   React.useEffect(() => {
-    const fetchDivisions = async () => {
-      try {
-        const { data } = await supabase.from('lhu_divisions').select('name');
-        if (data) {
-          setDbDivisions(data.map(d => d.name));
-        }
-      } catch (err) {
-        console.error('Failed to load divisions for dropdown:', err);
-      }
-    };
     fetchDivisions();
   }, []);
+
+  const handleAddDivision = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!newDivName.trim() || !newDivCode.trim()) {
+      setDivError('Nama dan Kode divisi wajib diisi.');
+      return;
+    }
+    setIsProcessingDiv(true);
+    setDivError('');
+    setDivSuccess('');
+    try {
+      const { error } = await supabase
+        .from('lhu_divisions')
+        .insert([{ 
+          name: newDivName.trim(), 
+          code: newDivCode.trim().toUpperCase() 
+        }]);
+
+      if (error) {
+        if (error.code === '23505') throw new Error('Nama atau Kode divisi sudah digunakan.');
+        throw error;
+      }
+
+      setDivSuccess('Divisi baru berhasil ditambahkan!');
+      setNewDivName('');
+      setNewDivCode('');
+      await fetchDivisions();
+      if (onRefreshUsers) onRefreshUsers();
+    } catch (err: any) {
+      setDivError(err.message || 'Gagal menambahkan divisi.');
+    } finally {
+      setIsProcessingDiv(false);
+    }
+  };
+
+  const handleStartEditDiv = (div: { id: string; name: string; code: string }) => {
+    setEditingDiv(div);
+    setEditDivName(div.name);
+    setEditDivCode(div.code);
+    setDivError('');
+    setDivSuccess('');
+  };
+
+  const handleSaveEditDivision = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!editingDiv) return;
+    if (!editDivName.trim() || !editDivCode.trim()) {
+      setDivError('Nama dan Kode divisi wajib diisi.');
+      return;
+    }
+    setIsProcessingDiv(true);
+    setDivError('');
+    setDivSuccess('');
+    try {
+      const oldName = editingDiv.name;
+      const newName = editDivName.trim();
+      const newCode = editDivCode.trim().toUpperCase();
+
+      const { error } = await supabase
+        .from('lhu_divisions')
+        .update({ name: newName, code: newCode })
+        .eq('id', editingDiv.id);
+
+      if (error) {
+        if (error.code === '23505') throw new Error('Nama atau Kode divisi sudah digunakan.');
+        throw error;
+      }
+
+      if (oldName !== newName) {
+        const { data: usersToUpdate, error: fetchUsersErr } = await supabase
+          .from('lhu_users')
+          .select('id, allowed_komoditi')
+          .contains('allowed_komoditi', [oldName]);
+
+        if (!fetchUsersErr && usersToUpdate) {
+          for (const user of usersToUpdate) {
+            const updatedKomoditi = user.allowed_komoditi?.map((k: string) => k === oldName ? newName : k) || [];
+            await supabase
+              .from('lhu_users')
+              .update({ allowed_komoditi: updatedKomoditi })
+              .eq('id', user.id);
+          }
+        }
+      }
+
+      setDivSuccess('Divisi berhasil diperbarui!');
+      setEditingDiv(null);
+      setEditDivName('');
+      setEditDivCode('');
+      await fetchDivisions();
+      if (onRefreshUsers) onRefreshUsers();
+    } catch (err: any) {
+      setDivError(err.message || 'Gagal memperbarui divisi.');
+    } finally {
+      setIsProcessingDiv(false);
+    }
+  };
+
+  const handleDeleteDivision = async (divId: string, divName: string) => {
+    if (!window.confirm(`Apakah Anda yakin ingin menghapus divisi "${divName}"? Menghapus divisi ini akan mencabut akses departemen ini dari semua anggota.`)) {
+      return;
+    }
+    setIsProcessingDiv(true);
+    setDivError('');
+    setDivSuccess('');
+    try {
+      const { error } = await supabase
+        .from('lhu_divisions')
+        .delete()
+        .eq('id', divId);
+
+      if (error) throw error;
+
+      const { data: usersToUpdate, error: fetchUsersErr } = await supabase
+        .from('lhu_users')
+        .select('id, allowed_komoditi')
+        .contains('allowed_komoditi', [divName]);
+
+      if (!fetchUsersErr && usersToUpdate) {
+        for (const user of usersToUpdate) {
+          const updatedKomoditi = user.allowed_komoditi?.filter((k: string) => k !== divName) || [];
+          await supabase
+            .from('lhu_users')
+            .update({ allowed_komoditi: updatedKomoditi })
+            .eq('id', user.id);
+        }
+      }
+
+      setDivSuccess(`Divisi "${divName}" berhasil dihapus.`);
+      await fetchDivisions();
+      if (onRefreshUsers) onRefreshUsers();
+    } catch (err: any) {
+      setDivError('Gagal menghapus divisi: ' + err.message);
+    } finally {
+      setIsProcessingDiv(false);
+    }
+  };
 
   const [faceapi, setFaceapi] = useState<any>(null);
   const [editCameraActive, setEditCameraActive] = useState(false);
@@ -446,6 +600,141 @@ export default function UsersTab({
           ))}
         </div>
       )}
+
+      {/* SECTION MASTER DEPARTEMEN / DIVISI */}
+      <div className="mt-8 border-t border-theme-border pt-8">
+        <div className="mb-6">
+          <h3 className="text-lg font-bold flex items-center gap-2 text-theme-text">
+            🏢 Kelola Master Departemen / Divisi
+          </h3>
+          <p className="text-xs text-theme-muted mt-1">
+            Kelola daftar divisi/departemen resmi yang akan digunakan untuk pengelompokan LHU/Sertifikat dan hak akses staf.
+          </p>
+        </div>
+
+        {divError && (
+          <div className="bg-status-red-bg border border-status-red-border text-status-red-text text-xs px-3.5 py-2.5 rounded-xl mb-4 animate-fade-in">
+            ⚠️ {divError}
+          </div>
+        )}
+
+        {divSuccess && (
+          <div className="bg-status-emerald-bg border border-status-emerald-border text-status-emerald-text text-xs px-3.5 py-2.5 rounded-xl mb-4 animate-fade-in">
+            🎉 {divSuccess}
+          </div>
+        )}
+
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
+          {/* Form Column */}
+          <div className="lg:col-span-4 bg-theme-input border border-theme-border rounded-2xl p-5 flex flex-col gap-4">
+            <h4 className="text-sm font-bold text-theme-text flex items-center gap-1.5 border-b border-theme-border pb-3">
+              {editingDiv ? '✏️ Edit Departemen / Divisi' : '➕ Tambah Departemen / Divisi'}
+            </h4>
+
+            <form onSubmit={editingDiv ? handleSaveEditDivision : handleAddDivision} className="flex flex-col gap-4">
+              <div className="flex flex-col gap-1">
+                <label className="text-xs font-semibold text-theme-muted">Nama Divisi</label>
+                <input 
+                  type="text" 
+                  value={editingDiv ? editDivName : newDivName}
+                  onChange={(e) => editingDiv ? setEditDivName(e.target.value) : setNewDivName(e.target.value)}
+                  placeholder="Contoh: Kimia, Safety, Sipil"
+                  className="w-full bg-theme-card border border-theme-border focus:border-status-blue-border focus:ring-2 focus:ring-blue-500/20 rounded-xl px-4 py-2.5 text-theme-text text-xs outline-none transition-all placeholder-slate-500"
+                  required
+                />
+              </div>
+
+              <div className="flex flex-col gap-1">
+                <label className="text-xs font-semibold text-theme-muted">Kode Divisi (Maks 10 Karakter)</label>
+                <input 
+                  type="text" 
+                  value={editingDiv ? editDivCode : newDivCode}
+                  onChange={(e) => editingDiv ? setEditDivCode(e.target.value) : setNewDivCode(e.target.value)}
+                  placeholder="Contoh: KM, SF, SP"
+                  maxLength={10}
+                  className="w-full bg-theme-card border border-theme-border focus:border-status-blue-border focus:ring-2 focus:ring-blue-500/20 rounded-xl px-4 py-2.5 text-theme-text text-xs outline-none transition-all placeholder-slate-500 font-mono uppercase"
+                  required
+                />
+              </div>
+
+              <div className="flex gap-2 justify-end pt-2">
+                {editingDiv && (
+                  <Button
+                    onClick={() => {
+                      setEditingDiv(null);
+                      setEditDivName('');
+                      setEditDivCode('');
+                      setDivError('');
+                      setDivSuccess('');
+                    }}
+                    className="font-bold text-xs"
+                  >
+                    Batal
+                  </Button>
+                )}
+                <Button
+                  type="primary"
+                  htmlType="submit"
+                  loading={isProcessingDiv}
+                  className="font-bold text-xs"
+                >
+                  {editingDiv ? 'Simpan' : 'Tambah'}
+                </Button>
+              </div>
+            </form>
+          </div>
+
+          {/* List Column */}
+          <div className="lg:col-span-8 bg-theme-input border border-theme-border rounded-2xl p-5">
+            <h4 className="text-sm font-bold text-theme-text flex items-center gap-1.5 border-b border-theme-border pb-3 mb-4">
+              📋 Daftar Departemen / Divisi Terdaftar
+            </h4>
+
+            {divisionsList.length === 0 ? (
+              <div className="text-center py-8 text-xs text-theme-dim">
+                Belum ada divisi terdaftar.
+              </div>
+            ) : (
+              <div className="overflow-x-auto">
+                <table className="w-full text-left border-collapse text-xs">
+                  <thead>
+                    <tr className="border-b border-theme-border text-theme-muted font-bold">
+                      <th className="py-2.5 px-3">Nama Divisi</th>
+                      <th className="py-2.5 px-3">Kode Divisi</th>
+                      <th className="py-2.5 px-3 text-right">Aksi</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {divisionsList.map((div) => (
+                      <tr key={div.id} className="border-b border-theme-border/50 hover:bg-theme-card/30 transition-all">
+                        <td className="py-3 px-3 font-semibold text-theme-text">{div.name}</td>
+                        <td className="py-3 px-3 font-mono text-status-blue-text font-bold">{div.code}</td>
+                        <td className="py-3 px-3 text-right flex gap-1.5 justify-end">
+                          <Button
+                            size="small"
+                            onClick={() => handleStartEditDiv(div)}
+                            className="text-[10px] font-bold"
+                          >
+                            Edit
+                          </Button>
+                          <Button
+                            size="small"
+                            danger
+                            onClick={() => handleDeleteDivision(div.id, div.name)}
+                            className="text-[10px] font-bold"
+                          >
+                            Hapus
+                          </Button>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            )}
+          </div>
+        </div>
+      </div>
 
       {showRegModal && (
         <div className="fixed inset-0 bg-theme-card backdrop-blur-sm z-50 flex items-center justify-center p-4">

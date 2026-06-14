@@ -7,6 +7,7 @@ import { ThemeWrapper } from "../components/ThemeWrapper";
 export const metadata: Metadata = {
   title: "E-Dokumen PROLAB",
   description: "Aplikasi Penomoran Dokumen PROLAB",
+  manifest: "/manifest.json",
 };
 
 export const viewport: Viewport = {

@@ -51,8 +51,6 @@ export default function TemplateTab({ userName }: TemplateTabProps) {
   const [checklistTemplates, setChecklistTemplates] = useState<any[]>([]);
   const [selectedKomoditi, setSelectedKomoditi] = useState('Elektronik');
   const [departments, setDepartments] = useState<string[]>(['Elektronik', 'Besi Baja', 'RF']);
-  const [showAddDept, setShowAddDept] = useState(false);
-  const [newDeptName, setNewDeptName] = useState('');
   const [currentItems, setCurrentItems] = useState<string[]>([]);
   const [newItemText, setNewItemText] = useState('');
   const [editingIdx, setEditingIdx] = useState<number | null>(null);
@@ -63,26 +61,6 @@ export default function TemplateTab({ userName }: TemplateTabProps) {
   const [nextLhuNumberInput, setNextLhuNumberInput] = useState<string>('');
   const [nextCertNumberInput, setNextCertNumberInput] = useState<string>('');
   const [savingSequence, setSavingSequence] = useState(false);
-
-  const handleAddNewDept = () => {
-    const trimmed = newDeptName.trim();
-    if (!trimmed) return;
-    if (departments.some(d => d.toLowerCase() === trimmed.toLowerCase())) {
-      const existing = departments.find(d => d.toLowerCase() === trimmed.toLowerCase());
-      if (existing) {
-        setSelectedKomoditi(existing);
-      }
-      setShowAddDept(false);
-      setNewDeptName('');
-      return;
-    }
-    const updated = [...departments, trimmed];
-    setDepartments(updated);
-    setSelectedKomoditi(trimmed);
-    setCurrentItems([]);
-    setShowAddDept(false);
-    setNewDeptName('');
-  };
 
   const mockData = {
     nomor: 45,
@@ -998,48 +976,6 @@ export default function TemplateTab({ userName }: TemplateTabProps) {
                     {kom}
                   </Button>
                 ))}
-
-                {showAddDept ? (
-                  <div className="flex gap-1 items-center bg-theme-card border border-theme-border rounded px-2 py-1">
-                    <input
-                      type="text"
-                      value={newDeptName}
-                      onChange={(e) => setNewDeptName(e.target.value)}
-                      placeholder="Nama Departemen Baru"
-                      className="bg-transparent text-theme-text text-[11px] outline-none w-32 py-0.5"
-                      onKeyDown={(e) => {
-                        if (e.key === 'Enter') handleAddNewDept();
-                      }}
-                      autoFocus
-                    />
-                    <button
-                      onClick={handleAddNewDept}
-                      className="text-status-emerald-text hover:text-status-emerald-text p-0.5 transition-colors"
-                      type="button"
-                    >
-                      <Check size={14} />
-                    </button>
-                    <button
-                      onClick={() => {
-                        setShowAddDept(false);
-                        setNewDeptName('');
-                      }}
-                      className="text-status-red-text hover:text-status-red-text p-0.5 transition-colors"
-                      type="button"
-                    >
-                      <X size={14} />
-                    </button>
-                  </div>
-                ) : (
-                  <Button
-                    type="dashed"
-                    onClick={() => setShowAddDept(true)}
-                    icon={<Plus size={12} />}
-                    className="text-[11px] font-bold rounded-none border-dashed border-slate-700 text-theme-muted hover:text-theme-text"
-                  >
-                    Tambah Departemen
-                  </Button>
-                )}
               </div>
             </div>
 

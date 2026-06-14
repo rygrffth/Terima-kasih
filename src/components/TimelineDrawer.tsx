@@ -3,6 +3,7 @@
 import React from 'react';
 import { LhuDocument } from '../types';
 import { X, Check } from 'lucide-react';
+import { supabase } from '../lib/supabase';
 
 interface TimelineDrawerProps {
   document: LhuDocument;
@@ -20,6 +21,39 @@ export default function TimelineDrawer({
   const isPendingNumbering = document.status === 'PENDING_NUMBERING';
   const isApproved = document.status === 'APPROVED';
   const isRejected = document.status === 'REJECTED';
+
+  const getDownloadUrl = (filePath: string): string => {
+    if (filePath.startsWith('fallback_path/')) {
+      return 'https://www.w3.org/WAI/ER/tests/xhtml/testfiles/resources/pdf/dummy.pdf';
+    }
+    const { data } = supabase.storage.from('lhu-documents').getPublicUrl(filePath);
+    return data?.publicUrl || '#';
+  };
+
+  // Parse version history from previous_file_path JSON array
+  let versions: any[] = [];
+  if (document.previous_file_path) {
+    try {
+      const trimmedPrev = document.previous_file_path.trim();
+      if (trimmedPrev.startsWith('[')) {
+        versions = JSON.parse(trimmedPrev);
+      } else {
+        // Legacy single previous file path
+        versions = [{
+          version: 1,
+          judul: document.judul,
+          file_path: document.previous_file_path,
+          catatan_admin: document.catatan_admin || 'Unggahan awal',
+          catatan_spv: null,
+          checked_supervisor_by: null,
+          checked_supervisor_at: null,
+          created_at: document.created_at
+        }];
+      }
+    } catch (e) {
+      console.error('Failed to parse previous_file_path history:', e);
+    }
+  }
 
   const getAdminStatusClass = () => {
     if (document.checked_by) return 'success';
@@ -180,6 +214,93 @@ export default function TimelineDrawer({
               </div>
             </div>
           </div>
+
+          {versions.length > 0 && (
+            <div className="mt-8 border-t border-theme-border pt-6 pb-2">
+              <h4 className="text-xs font-bold uppercase tracking-wider text-theme-dim mb-4 pl-1">
+                Riwayat Versi Berkas ({versions.length + 1})
+              </h4>
+              <div className="flex flex-col gap-3">
+                {versions.map((ver: any, index: number) => (
+                  <div key={index} className="bg-theme-input border border-theme-border rounded-2xl p-4 text-xs flex flex-col gap-2 shadow-sm">
+                    <div className="flex justify-between items-center">
+                      <span className="font-bold text-status-blue-text font-mono bg-status-blue-bg/40 border border-status-blue-border/40 px-2 py-0.5 rounded text-[10px]">
+                        Versi {ver.version || (index + 1)}
+                      </span>
+                      <span className="text-[10px] text-theme-dim">
+                        {ver.created_at ? new Date(ver.created_at).toLocaleDateString('id-ID', {
+                          day: 'numeric',
+                          month: 'short',
+                          year: 'numeric'
+                        }) : ''}
+                      </span>
+                    </div>
+                    <p className="font-bold text-theme-text line-clamp-2">{ver.judul}</p>
+                    {ver.catatan_admin && (
+                      <div className="text-theme-muted text-[11px] bg-theme-card border border-theme-border p-2.5 rounded-xl italic">
+                        <strong>Catatan Admin:</strong> &ldquo;{ver.catatan_admin}&rdquo;
+                      </div>
+                    )}
+                    {ver.catatan_spv && (
+                      <div className="text-status-red-text text-[11px] bg-status-red-bg border border-status-red-border p-2.5 rounded-xl italic">
+                        <strong>Catatan Supervisor:</strong> &ldquo;{ver.catatan_spv}&rdquo;
+                      </div>
+                    )}
+                    <div className="mt-1 flex justify-between items-center border-t border-theme-border/50 pt-2 text-[10px] text-theme-dim">
+                      <span>Oleh: {ver.uploaded_by || document.uploaded_by}</span>
+                      {ver.file_path === 'deleted' ? (
+                        <span className="text-status-orange-text font-semibold flex items-center gap-1">
+                          ⚠️ Berkas Kedaluwarsa (Telah Dihapus)
+                        </span>
+                      ) : (
+                        <a
+                          href={getDownloadUrl(ver.file_path)}
+                          target="_blank"
+                          rel="noreferrer"
+                          className="inline-flex items-center gap-1 font-bold text-status-blue-text hover:underline"
+                        >
+                          📥 Unduh Berkas V{ver.version || (index + 1)}
+                        </a>
+                      )}
+                    </div>
+                  </div>
+                ))}
+                
+                {/* Current Active Version */}
+                <div className="bg-theme-input border border-status-emerald-border/45 rounded-2xl p-4 text-xs flex flex-col gap-2 shadow-sm">
+                  <div className="flex justify-between items-center">
+                    <span className="font-bold text-status-emerald-text font-mono bg-status-emerald-bg/40 border border-status-emerald-border/40 px-2 py-0.5 rounded text-[10px]">
+                      Versi {versions.length + 1} (Aktif)
+                    </span>
+                    <span className="text-[10px] text-theme-dim">
+                      {document.updated_at ? new Date(document.updated_at).toLocaleDateString('id-ID', {
+                        day: 'numeric',
+                        month: 'short',
+                        year: 'numeric'
+                      }) : ''}
+                    </span>
+                  </div>
+                  <p className="font-bold text-theme-text line-clamp-2">{document.judul}</p>
+                  {document.catatan_admin && (
+                    <div className="text-theme-muted text-[11px] bg-theme-card border border-theme-border p-2.5 rounded-xl italic">
+                      <strong>Catatan Admin:</strong> &ldquo;{document.catatan_admin}&rdquo;
+                    </div>
+                  )}
+                  <div className="mt-1 flex justify-between items-center border-t border-theme-border/50 pt-2 text-[10px] text-theme-dim">
+                    <span>Oleh: {document.uploaded_by}</span>
+                    <a
+                      href={getDownloadUrl(document.file_path)}
+                      target="_blank"
+                      rel="noreferrer"
+                      className="inline-flex items-center gap-1 font-bold text-status-emerald-text hover:underline"
+                    >
+                      📥 Unduh Berkas V{versions.length + 1}
+                    </a>
+                  </div>
+                </div>
+              </div>
+            </div>
+          )}
         </div>
 
         <footer className="pt-4 border-t border-theme-border mt-6 flex flex-col gap-2">

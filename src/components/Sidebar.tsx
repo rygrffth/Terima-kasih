@@ -369,8 +369,8 @@ export function SidebarPanel({ isOpen, onClose }: SidebarProps) {
             </div>
           )}
           <p className="text-center text-[10px] text-theme-muted mt-4">
-            © {new Date().getFullYear()} PROLAB Office<br />
-            <span className="font-mono">Biometric Secured</span>
+            © {new Date().getFullYear()} PT PROLAB Sertifikasi Indonesia<br />
+            <span className="font-mono">Naufal Rayhan Ali Rahman</span>
           </p>
         </div>
       </aside>

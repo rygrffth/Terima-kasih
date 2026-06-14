@@ -224,6 +224,45 @@ export default function AdminUploadLhuPage() {
       return;
     }
 
+    // Capture Offline Mode
+    if (typeof window !== 'undefined' && !navigator.onLine) {
+      try {
+        if (!selectedFile) return;
+        const { saveOfflineUpload } = await import('../../../lib/indexedDb');
+        await saveOfflineUpload({
+          judul: lhuTitle,
+          tipe_dokumen: tipeDokumen,
+          kategori_dokumen: kategoriDokumen,
+          komoditi: userKomoditi,
+          priority: priority,
+          uploaded_by: userName,
+          file: selectedFile,
+          additionalFiles: additionalFiles
+        });
+
+        // Clear Form States
+        setLhuTitle('');
+        setSelectedFile(null);
+        setAdditionalFiles([]);
+        if (fileInputRef.current) fileInputRef.current.value = '';
+        if (filePreviewUrl && (fileType === 'image' || fileType === 'pdf')) {
+          URL.revokeObjectURL(filePreviewUrl);
+        }
+        setFilePreviewUrl('');
+        setFileType(null);
+        localStorage.removeItem('lhu_admin_draft_title');
+        setUploadProgress(0);
+
+        alert('Sistem sedang offline. Dokumen Anda telah disimpan secara lokal di perangkat ini dan akan otomatis diunggah ketika internet kembali terhubung.');
+        return;
+      } catch (err: any) {
+        console.error('Gagal menyimpan draf offline:', err);
+        setUploadError('Gagal menyimpan draf offline: ' + err.message);
+        setUploadProgress(0);
+        return;
+      }
+    }
+
     setUploadProgress(10);
     setUploadError('');
 

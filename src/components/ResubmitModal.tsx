@@ -72,10 +72,58 @@ export default function ResubmitModal({
       };
 
       if (selectedFile) {
+        // Build versioning history in previous_file_path
+        let existingVersions: any[] = [];
+        if (document.previous_file_path) {
+          try {
+            const trimmedPrev = document.previous_file_path.trim();
+            if (trimmedPrev.startsWith('[')) {
+              existingVersions = JSON.parse(trimmedPrev);
+            } else {
+              // Convert legacy single file path to first history version entry
+              existingVersions = [{
+                version: 1,
+                judul: document.judul,
+                file_path: document.previous_file_path,
+                catatan_admin: document.catatan_admin || 'Unggahan awal',
+                catatan_spv: null,
+                checked_supervisor_by: null,
+                checked_supervisor_at: null,
+                created_at: document.created_at
+              }];
+            }
+          } catch (e) {
+            console.error('Failed to parse previous_file_path history:', e);
+            existingVersions = [{
+              version: 1,
+              judul: document.judul,
+              file_path: document.previous_file_path,
+              catatan_admin: document.catatan_admin || 'Unggahan awal',
+              catatan_spv: null,
+              checked_supervisor_by: null,
+              created_at: document.created_at
+            }];
+          }
+        }
+
+        // Add the current active file details to history before replacing it
+        const currentVersionEntry = {
+          version: existingVersions.length + 1,
+          judul: document.judul,
+          file_path: document.file_path,
+          catatan_admin: document.catatan_admin || null,
+          catatan_spv: document.catatan_spv || null,
+          checked_supervisor_by: document.checked_supervisor_by || null,
+          checked_supervisor_at: document.checked_supervisor_at || null,
+          created_at: document.updated_at || document.created_at
+        };
+        
+        existingVersions.push(currentVersionEntry);
+        payload.previous_file_path = JSON.stringify(existingVersions);
         payload.file_path = finalFilePath;
-        payload.previous_file_path = document.file_path; // Save old file path for version comparison
       } else {
         payload.file_path = document.file_path;
+        payload.previous_file_path = document.previous_file_path;
       }
 
       const { error: dbErr } = await supabase
