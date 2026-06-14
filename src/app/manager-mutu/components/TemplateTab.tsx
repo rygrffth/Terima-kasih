@@ -966,16 +966,22 @@ export default function TemplateTab({ userName }: TemplateTabProps) {
             <div className="flex flex-col gap-2">
               <label className="text-xs font-bold text-theme-muted">Pilih Departemen</label>
               <div className="flex gap-2 flex-wrap items-center">
-                {departments.map(kom => (
-                  <Button
-                    key={kom}
-                    type={selectedKomoditi === kom ? 'primary' : 'default'}
-                    onClick={() => setSelectedKomoditi(kom)}
-                    className="font-bold rounded-none"
-                  >
-                    {kom}
-                  </Button>
-                ))}
+                {departments.map(kom => {
+                  const isActive = selectedKomoditi === kom;
+                  return (
+                    <button
+                      key={kom}
+                      onClick={() => setSelectedKomoditi(kom)}
+                      className={`px-4 py-2 text-xs font-bold transition-all duration-200 border cursor-pointer ${
+                        isActive
+                          ? 'bg-status-orange-bg text-status-orange-text border-status-orange-border shadow-sm shadow-orange-500/10'
+                          : 'bg-theme-card text-theme-muted border-theme-border hover:text-theme-text hover:bg-theme-hover'
+                      }`}
+                    >
+                      {kom}
+                    </button>
+                  );
+                })}
               </div>
             </div>
 
