@@ -1059,14 +1059,26 @@ export default function TemplateTab({ userName }: TemplateTabProps) {
                   ))}
                 </div>
               ) : (
-                <div className="text-center py-6 bg-theme-card border border-theme-border rounded-xl text-theme-dim text-xs italic">
-                  Belum ada checklist khusus. Supervisor akan melihat SOP 7 default:
-                  <ul className="text-left list-disc list-inside mt-2 space-y-1 not-italic text-theme-muted">
-                    <li>Kesesuaian identitas sampel LHU</li>
-                    <li>Hasil pengujian parameter utama</li>
-                    <li>Foto bukti pengujian sampel lengkap</li>
-                    <li>Tanda tangan verifikasi pengaju lengkap</li>
-                  </ul>
+                <div className="flex flex-col items-center py-6 bg-theme-card border border-theme-border rounded-xl text-theme-dim text-xs">
+                  <span className="font-semibold mb-4 text-center px-4">Belum ada checklist khusus. Supervisor akan melihat SOP 7 default:</span>
+                  <div className="flex flex-col gap-2 w-full max-w-md px-4 text-left">
+                    <div className="flex items-center gap-2.5 bg-theme-input/40 px-3 py-2 border border-theme-border/60 rounded-lg text-theme-muted">
+                      <span className="w-1.5 h-1.5 bg-status-orange-text rounded-full shrink-0 animate-pulse" />
+                      <span>Kesesuaian identitas sampel LHU</span>
+                    </div>
+                    <div className="flex items-center gap-2.5 bg-theme-input/40 px-3 py-2 border border-theme-border/60 rounded-lg text-theme-muted">
+                      <span className="w-1.5 h-1.5 bg-status-orange-text rounded-full shrink-0 animate-pulse" />
+                      <span>Hasil pengujian parameter utama</span>
+                    </div>
+                    <div className="flex items-center gap-2.5 bg-theme-input/40 px-3 py-2 border border-theme-border/60 rounded-lg text-theme-muted">
+                      <span className="w-1.5 h-1.5 bg-status-orange-text rounded-full shrink-0 animate-pulse" />
+                      <span>Foto bukti pengujian sampel lengkap</span>
+                    </div>
+                    <div className="flex items-center gap-2.5 bg-theme-input/40 px-3 py-2 border border-theme-border/60 rounded-lg text-theme-muted">
+                      <span className="w-1.5 h-1.5 bg-status-orange-text rounded-full shrink-0 animate-pulse" />
+                      <span>Tanda tangan verifikasi pengaju lengkap</span>
+                    </div>
+                  </div>
                 </div>
               )}
 
